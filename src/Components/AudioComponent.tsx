@@ -8,7 +8,7 @@ import MicOffIcon from '@material-ui/icons/MicOff';
 import IconButton from "@material-ui/core/IconButton";
 
 
-export default function AudioComponent() {
+export default function AudioComponent(props: any) {
     let [mediaRecorder, setMediaRecorder] = React.useState<MediaRecorder|null>(null);
     const [mediaChunks, setMediaChunks] = React.useState<BlobPart[]>([]);
     const [recording, setRecording] = React.useState(true);
@@ -48,18 +48,16 @@ export default function AudioComponent() {
 
     function stopRecording() {
         const audio = document.querySelector('audio')!;
-        if (mediaRecorder == null) {
-            alert('You have not started recording any messages.');
-            return;
-        }
-        mediaRecorder.stop();
-        console.log(mediaRecorder.state)
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(mediaChunks, {
+        mediaRecorder!.stop();
+        console.log(mediaRecorder!.state)
+        mediaRecorder!.onstop = () => {
+            const audioBlob: Blob = new Blob(mediaChunks, {
                 type: 'audio/mpeg'
             })
             setMediaChunks([]);
             audio.src = window.URL.createObjectURL(audioBlob);
+            mediaRecorder!.stream.getAudioTracks()[0].stop();
+            props.setAudioBlob(audioBlob)
             setRecording(true);
         }
         console.log("recorder stopped.")
