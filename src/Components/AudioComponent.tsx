@@ -6,10 +6,11 @@ import CardActions from "@material-ui/core/CardActions";
 import MicIcon from '@material-ui/icons/Mic';
 import MicOffIcon from '@material-ui/icons/MicOff';
 import IconButton from "@material-ui/core/IconButton";
+const axios = require('axios').default;
 
 
 export default function AudioComponent(props: any) {
-    let [mediaRecorder, setMediaRecorder] = React.useState<MediaRecorder|null>(null);
+    let [mediaRecorder, setMediaRecorder] = React.useState<MediaRecorder | null>(null);
     const [mediaChunks, setMediaChunks] = React.useState<BlobPart[]>([]);
     const [recording, setRecording] = React.useState(true);
 
@@ -48,19 +49,32 @@ export default function AudioComponent(props: any) {
 
     function stopRecording() {
         const audio = document.querySelector('audio')!;
+
         mediaRecorder!.stop();
         console.log(mediaRecorder!.state)
         mediaRecorder!.onstop = () => {
-            const audioBlob: Blob = new Blob(mediaChunks, {
-                type: 'audio/mpeg'
+            const audioFile: File = new File(mediaChunks, 'audioFile.flac', {
+                type: 'audio/flac',
             })
             setMediaChunks([]);
-            audio.src = window.URL.createObjectURL(audioBlob);
+            audio.src = window.URL.createObjectURL(audioFile);
             mediaRecorder!.stream.getAudioTracks()[0].stop();
-            props.setAudioBlob(audioBlob)
             setRecording(true);
+            postAudioFile(audioFile);
         }
         console.log("recorder stopped.")
+    }
+
+    function postAudioFile(audioFile: File) {
+        const bodyFormData = new FormData();
+        bodyFormData.append('audioFile', audioFile, 'audioFile.flac');
+        axios.post('/blob', bodyFormData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        })
+            .then(console.log)
+            .catch(console.error);
     }
 
 
