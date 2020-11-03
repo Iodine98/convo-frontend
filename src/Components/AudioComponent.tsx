@@ -6,7 +6,7 @@ import CardActions from "@material-ui/core/CardActions";
 import MicIcon from '@material-ui/icons/Mic';
 import MicOffIcon from '@material-ui/icons/MicOff';
 import IconButton from "@material-ui/core/IconButton";
-const axios = require('axios').default;
+import axios from 'axios';
 
 
 export default function AudioComponent(props: any) {
@@ -32,49 +32,54 @@ export default function AudioComponent(props: any) {
 
     function startRecording() {
         navigator.mediaDevices.getUserMedia({
-            audio: true,
+            audio: {
+                sampleSize: 16,
+            },
+            video: false,
         }).then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.start();
-            console.log(mediaRecorder!.state)
-            console.log("recorder started");
-            setRecording(false);
-            mediaRecorder!.ondataavailable = e => {
-                mediaChunks.push(e.data)
+            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                });
+                mediaRecorder.start();
+                console.log(mediaRecorder!.state);
+                console.log("recorder started");
+                setRecording(false);
+                mediaRecorder!.ondataavailable = e => {
+                    mediaChunks.push(e.data)
+                };
+                setMediaRecorder(mediaRecorder);
+            } else {
+                throw Error('MediaRecorder does not support WEBM audio.');
             }
-            console.log(mediaRecorder)
-            setMediaRecorder(mediaRecorder);
-        }).catch(console.error)
+
+        }).catch(console.error);
     }
 
     function stopRecording() {
         const audio = document.querySelector('audio')!;
-
         mediaRecorder!.stop();
-        console.log(mediaRecorder!.state)
+        console.log(mediaRecorder!.state);
         mediaRecorder!.onstop = () => {
-            const audioFile: File = new File(mediaChunks, 'audioFile.flac', {
-                type: 'audio/flac',
-            })
-            setMediaChunks([]);
+            const audioFile: Blob = new Blob(mediaChunks)
             audio.src = window.URL.createObjectURL(audioFile);
             mediaRecorder!.stream.getAudioTracks()[0].stop();
             setRecording(true);
+            setMediaChunks([]);
             postAudioFile(audioFile);
-        }
-        console.log("recorder stopped.")
+        };
+        console.log("recorder stopped.");
     }
 
-    function postAudioFile(audioFile: File) {
-        const bodyFormData = new FormData();
-        bodyFormData.append('audioFile', audioFile, 'audioFile.flac');
-        axios.post('/blob', bodyFormData, {
+    function postAudioFile(audioFile: Blob) {
+        axios.post('/file', audioFile, {
             headers: {
-                'Content-Type': 'multipart/form-data',
+                'Content-Type': 'audio/webm;codecs=opus',
+                'Sign': Math.round(Math.random() * 10).toString(),
             }
-        })
-            .then(console.log)
-            .catch(console.error);
+        }).then(response => {
+            props.setTranscript(response.data);
+        }).catch(console.error);
     }
 
 
@@ -94,7 +99,6 @@ export default function AudioComponent(props: any) {
                         You can record and play back your own voice.
                     </Typography>
                 </CardContent>
-
             </CardActionArea>
             <CardActions>
                 <IconButton onClick={startRecording}>
@@ -106,5 +110,5 @@ export default function AudioComponent(props: any) {
                 <audio controls id='audio'/>
             </CardActions>
         </Card>
-    )
+    );
 }

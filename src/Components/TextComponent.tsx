@@ -1,6 +1,6 @@
+import React from "react";
 import {Card, CardActionArea, CardContent} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
-import React from "react";
 import {makeStyles} from "@material-ui/styles";
 
 export default function TextComponent(props: any) {
@@ -17,8 +17,6 @@ export default function TextComponent(props: any) {
     }));
     const classes = useStyles();
 
-    const str = 'lovely';
-
     return (
         <Card className={classes.root}>
             <CardActionArea>
@@ -27,7 +25,7 @@ export default function TextComponent(props: any) {
                         Displayed text
                     </Typography>
                     <Typography variant="body2" color="textSecondary" component="p">
-                        {str}
+                        {props.transcript}
                     </Typography>
                 </CardContent>
             </CardActionArea>

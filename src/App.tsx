@@ -7,7 +7,7 @@ import Grid from "@material-ui/core/Grid";
 import TextComponent from "./Components/TextComponent";
 
 function App() {
-    const [audioBlob, setAudioBlob] = React.useState<Blob|null>(null);
+    const [transcript, setTranscript] = React.useState<Blob|null>(null);
 
 
     return (
@@ -15,10 +15,10 @@ function App() {
             <CssBaseline/>
             <Grid container direction='row'>
                 <Grid item>
-                    <AudioComponent setAudioBlob={setAudioBlob}/>
+                    <AudioComponent setTranscript={setTranscript}/>
                 </Grid>
                 <Grid item>
-                    <TextComponent audioBlob={audioBlob}/>
+                    <TextComponent transcript={transcript}/>
                 </Grid>
             </Grid>
         </ThemeProvider>
