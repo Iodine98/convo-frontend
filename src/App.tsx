@@ -5,22 +5,27 @@ import {CssBaseline} from "@material-ui/core";
 import AudioComponent from "./Components/AudioComponent";
 import Grid from "@material-ui/core/Grid";
 import TextComponent from "./Components/TextComponent";
+import ChatWindow from "./Components/ChatWindow";
 
 function App() {
-    const [audioBlob, setAudioBlob] = React.useState<Blob|null>(null);
+    const [transcript, setTranscript] = React.useState<String>("");
 
 
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline/>
-            <Grid container direction='row'>
-                <Grid item>
-                    <AudioComponent setAudioBlob={setAudioBlob}/>
-                </Grid>
-                <Grid item>
-                    <TextComponent audioBlob={audioBlob}/>
-                </Grid>
-            </Grid>
+            {/*<Grid container direction='column-reverse'>*/}
+                <ChatWindow />
+            {/*</Grid>*/}
+            {/*<Grid container direction='row'>*/}
+            {/*    <Grid item>*/}
+            {/*        <AudioComponent setTranscript={setTranscript}/>*/}
+            {/*    </Grid>*/}
+            {/*    <Grid item>*/}
+            {/*        <TextComponent*/}
+            {/*            transcript={transcript}/>*/}
+            {/*    </Grid>*/}
+            {/*</Grid>*/}
         </ThemeProvider>
     );
 }
