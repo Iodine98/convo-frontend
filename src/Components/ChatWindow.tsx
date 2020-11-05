@@ -2,11 +2,18 @@ import React from "react";
 // @ts-ignore
 import ChatBot from 'react-simple-chatbot';
 
+interface TextStep {
+    id: string | number,
+    message?: string | ((previousValue: string, steps: Message[]) => string),
+    trigger?: string | number | ((value: string, steps: Message[]) => string),
+    avatar: string
+}
+
 interface Message {
-    id: string,
-    message?: string,
+    id: string | number,
+    message?: string | ((previousValue: string, steps: Message[]) => string),
     user?: boolean,
-    trigger?: string,
+    trigger?: string | number | ((value: string, steps: Message[]) => string),
     end?: boolean,
 }
 
@@ -19,8 +26,11 @@ export default function ChatWindow(props: any) {
         }, {
             id: '2',
             user: true,
-            trigger: '2'
-        },
+            trigger: '3'
+        }, {
+            id: '3',
+            message: (previousValue: string, steps: Message[]) => `Hello ${previousValue}`,
+        }
     ];
     const [steps, setSteps] = React.useState<Message[]>(initialSteps);
 
@@ -34,17 +44,4 @@ export default function ChatWindow(props: any) {
             />
         </div>
     );
-
-
 }
-
-// <div>
-//     {/*<button className='open-button' onClick={}>Chat</button>*/}
-//     {/*<div className='chat-popup' id='myForm'>*/}
-//     {/*    <h1>Chat</h1>*/}
-//     {/*    <label htmlFor='msg'>Message</label>*/}
-//     {/*    <textarea placeholder='Type message...' name='msg' required/>*/}
-//     {/*    <button type='submit' className='btn'>Send</button>*/}
-//     {/*    <button type='button' className='btn cancel' onClick={closeForm}/>*/}
-//     {/*</div>*/}
-// {/*</div>*/}
