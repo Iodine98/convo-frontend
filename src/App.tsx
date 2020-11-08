@@ -2,9 +2,9 @@ import React from 'react';
 import theme from "./theme";
 import {ThemeProvider} from "@material-ui/styles";
 import {CssBaseline} from "@material-ui/core";
-import ChatWindow from "./Components/ChatWindow";
+import ChatWindow from "./Components/Chat/ChatWindow";
 
-function App() {
+export default function App() {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline/>
@@ -12,5 +12,3 @@ function App() {
         </ThemeProvider>
     );
 }
-
-export default App;
