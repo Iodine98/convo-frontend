@@ -25,12 +25,19 @@ export default function TextBar(props?: any) {
         audioComponent!.stopRecording();
     }
 
+    function onSubmit(event: any, clicked: boolean) {
+        if(clicked || event.key === 'Enter'){
+            props.setMessageString(inputValue);
+            setInputValue('');
+        }
+    }
+
     return (
         <div className={'text-bar'}>
             <input type={'text'}
                    value={inputValue}
                    onChange={e => setInputValue(e.target.value)}
-                   onKeyPress={event => event.key === 'Enter' && inputValue.length > 0 ? props.setMessageString(inputValue) : null}/>
+                   onKeyPress={event => event.key === 'Enter' && inputValue.length > 0 ? onSubmit(event, false) : null}/>
             <div className={'buttons'}>
                 {(() => {
                     if (currentlyRecording) {
@@ -50,7 +57,7 @@ export default function TextBar(props?: any) {
                     }
                 })()}
                 <IconButton
-                    onClick={() => props.setMessageString(inputValue)}>
+                    onClick={event => onSubmit(event,true)}>
                     <SendIcon />
                 </IconButton>
             </div>
