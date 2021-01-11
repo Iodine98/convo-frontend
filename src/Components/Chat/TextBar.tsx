@@ -44,7 +44,7 @@ export default function TextBar(props?: any) {
      * @param clicked when the users clicks on the send icon -> addMessage to ChatWindow
      */
     function onSubmit(event: any, clicked: boolean) {
-        if((clicked || event.key === 'Enter') && inputValue.length > 0){
+        if((clicked || event.key === 'Enter') && inputValue.toString().length > 0){
             props.setMessageString(inputValue);
             setInputValue('');
         }

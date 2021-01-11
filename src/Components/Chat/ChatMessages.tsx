@@ -23,12 +23,6 @@ export default function ChatMessages(props?: any) {
     // A magic number to distinguish my own message from someone else's
     const currentId: number = 1;
     // initializing the messages array with example messages
-    // {
-    //     message: 'What would you like to name your variable?',
-    //         id: 2,
-    //     avatar: "",
-    //     time: new Date(),
-    // }
     const [messages, setMessages] = React.useState<ChatMessage[]>([]);
     const [editorReady, setEditorReady] = React.useState<boolean>(false);
     const [codeSnippet, setCodeSnippet] = React.useState<CodeSnippet>({
@@ -41,7 +35,7 @@ export default function ChatMessages(props?: any) {
     const variableEntitiesReg: string[] = ['name of your variable', 'type of your variable', 'value of your variable'];
     const functionEntitiesReg: string[] = ['name of your function', 'return type of your function', 'parameter(s) of your function (with spaces in between)'];
     const variableEntities: CodeEntities[] = ['variableName', 'type', 'value'];
-    const statementTypeRegexes = ['variable', 'function']
+    const statementTypeRegexes = ['variable', 'function', 'clear']
 
     useEffect(() => {
         if (!editorReady && props.messageString !== '') {
@@ -69,6 +63,9 @@ export default function ChatMessages(props?: any) {
                 avatar: '',
                 time: new Date()
             }])
+        } else if (statementType === 'clear'){
+            setMessages([]);
+            setStatementType('');
         }
         
     }, [functionEntitiesReg, messages, statementType, variableEntitiesReg])
@@ -109,6 +106,14 @@ export default function ChatMessages(props?: any) {
     useEffect(() => {
         if (editorReady) {
             props.setLiveEditorInput(codeSnippet);
+            return () => {
+                setEditorReady(false);
+                setCodeSnippet({
+                    'variableName': '',
+                    'type': '',
+                    'value': '',
+                })
+            }
 
         }
     })
@@ -118,12 +123,12 @@ export default function ChatMessages(props?: any) {
      * Render method of ChatMessages
      */
     return (
-        <div style={{maxHeight: '25em'}}>
-            {messages.map((message) => {
+        <div>
+            {messages.map((message, index) => {
                     // my own messages
                     if (message.id === currentId) {
                         return (
-                            <div className={'container darker'} key={`${message.time.toDateString()} | ${message.time.toTimeString()}`}>
+                            <div className={'container darker'} key={index}>
                                 <img src={message.avatar} alt={'Avatar'} className={'right'}/>
                                 <p>{message.message}</p>
                                 <span className={'time-right'}>{`${message.time.toDateString()} | ${message.time.toTimeString()}`}</span>
@@ -132,7 +137,7 @@ export default function ChatMessages(props?: any) {
                         // other party's messages
                     } else {
                         return (
-                            <div className={'container'} key={`${message.time.toDateString()} | ${message.time.toTimeString()}`}>
+                            <div className={'container'} key={index}>
                                 <img src={message.avatar} alt={'Avatar'}/>
                                 <p>{message.message}</p>
                                 <span className={'time-left'}>{`${message.time.toDateString()} | ${message.time.toTimeString()}`}</span>
