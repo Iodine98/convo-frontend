@@ -2,17 +2,32 @@ import React, {useEffect} from 'react';
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-monokai";
+import {CodeSnippet, FunctionSnippet, VariableSnippet} from "../Chat/ChatMessages";
 
 export default function LiveCodeEditor(props?: any){
     const [editorValue, setEditorValue] = React.useState('');
 
+    function isVariable(statement: CodeSnippet): statement is VariableSnippet {
+        return (statement as VariableSnippet).value !== undefined;
+    }
+
+    function isFunction(statement: CodeSnippet): statement is FunctionSnippet {
+        return (statement as FunctionSnippet).returnType !== undefined;
+    }
+
     useEffect(() => {
-        if (props.liveEditorInput.variableName !== undefined && props.liveEditorInput.type !== undefined && props.liveEditorInput.value !== undefined){
+        if (isVariable(props.liveEditorInput)){
             let finalValue = props.liveEditorInput.value
             if (props.liveEditorInput.type === 'string'){
                 finalValue = `'${finalValue}'`;
             }
-            setEditorValue(editorValue => editorValue +`const ${props.liveEditorInput.variableName}: ${props.liveEditorInput.type} = ${finalValue};\n\n`);
+            const finalString = `const ${props.liveEditorInput.variableName}: ${props.liveEditorInput.type} = ${finalValue};\n\n`
+            setEditorValue(editorValue => editorValue + finalString);
+        }
+        if (isFunction(props.liveEditorInput)){
+            const currentFunction = props.liveEditorInput;
+            const finalString = `function ${currentFunction.functionName}(${currentFunction.variables.toString()}): ${currentFunction.returnType} {\n\t${currentFunction.body}\n};\n\n`
+            setEditorValue(editorValue => editorValue + finalString);
         }
     }, [props.liveEditorInput]);
 
