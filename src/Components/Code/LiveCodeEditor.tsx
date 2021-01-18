@@ -1,8 +1,8 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-monokai";
-import {CodeSnippet, FunctionSnippet, VariableSnippet} from "../Chat/ChatMessages";
+import {CallingSnippet, CodeSnippet, FunctionSnippet, VariableSnippet} from "../Chat/ChatMessages";
 
 export default function LiveCodeEditor(props?: any){
     const [editorValue, setEditorValue] = React.useState('');
@@ -15,21 +15,43 @@ export default function LiveCodeEditor(props?: any){
         return (statement as FunctionSnippet).returnType !== undefined;
     }
 
+    function isCalling(statement: CodeSnippet): statement is CallingSnippet {
+        return (statement as CallingSnippet).parentFunction === 'window';
+    }
+
+    const setVariable = useCallback(() => {
+        const currentVariable = props.liveEditorInput;
+        let finalValue = currentVariable.value
+        if (props.liveEditorInput.type === 'string'){
+            finalValue = `'${finalValue}'`;
+        }
+        const finalString = `const ${currentVariable.variableName}: ${currentVariable.type} = ${finalValue};\n\n`
+        setEditorValue(editorValue => editorValue + finalString);
+    }, [props.liveEditorInput]);
+    
+    const setFunction = useCallback(() => {
+        const currentFunction = props.liveEditorInput;
+        const finalString = `function ${currentFunction.functionName}(${currentFunction.variables.toString()}): ${currentFunction.returnType} {\n\t${currentFunction.body}\n};\n\n`
+        setEditorValue(editorValue => editorValue + finalString);
+    }, [props.liveEditorInput]);
+
+    const setCalling = useCallback(() => {
+        const currentCalling = props.liveEditorInput;
+        const finalString = `${currentCalling.functionName}(${currentCalling.arguments.toString()});\n\n`;
+        setEditorValue(editorValue => editorValue + finalString);
+    }, [props.liveEditorInput])
+
     useEffect(() => {
         if (isVariable(props.liveEditorInput)){
-            let finalValue = props.liveEditorInput.value
-            if (props.liveEditorInput.type === 'string'){
-                finalValue = `'${finalValue}'`;
-            }
-            const finalString = `const ${props.liveEditorInput.variableName}: ${props.liveEditorInput.type} = ${finalValue};\n\n`
-            setEditorValue(editorValue => editorValue + finalString);
+            setVariable();
         }
         if (isFunction(props.liveEditorInput)){
-            const currentFunction = props.liveEditorInput;
-            const finalString = `function ${currentFunction.functionName}(${currentFunction.variables.toString()}): ${currentFunction.returnType} {\n\t${currentFunction.body}\n};\n\n`
-            setEditorValue(editorValue => editorValue + finalString);
+            setFunction();
         }
-    }, [props.liveEditorInput]);
+        if (isCalling(props.liveEditorInput)){
+            setCalling();
+        }
+    }, [props.liveEditorInput, setCalling, setFunction, setVariable]);
 
 
 

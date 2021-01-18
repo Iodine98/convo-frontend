@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from "react";
+import React, {useEffect} from "react";
 import '../../Styles/ChatWindow.scss';
 
 // interface to help with type checking each chatMessage object
@@ -7,6 +7,13 @@ interface ChatMessage {
     avatar: string,
     message: string,
     time: Date,
+}
+
+export interface CallingSnippet {
+    parentFunction: string,
+    functionName: string,
+    arguments: string[]
+    [name: string]: string | string[],
 }
 
 export interface VariableSnippet {
@@ -21,24 +28,27 @@ export interface FunctionSnippet {
     variables: string[],
     body: string,
     returnType: string,
-
     [name: string]: string | string[],
 }
 
-export type CodeSnippet = FunctionSnippet | VariableSnippet | object;
+export type CodeSnippet = FunctionSnippet | VariableSnippet | CallingSnippet | object;
 
 const variableEntitiesQuestions: string[] = ['name of your variable', 'type of your variable', 'value of your variable'];
 const functionEntitiesQuestions: string[] = ['name of your function', 'parameter(s) of your function (with spaces in between)', 'the body of your function', 'return type of your function'];
+const callingEntitiesQuestions: string[] = ['name of your function', 'argument(s) of your function (with spaces in between)',]
 const entitiesQuestions: { [index: string]: string[] } = {
     'variable': variableEntitiesQuestions,
     'function': functionEntitiesQuestions,
+    'calling': callingEntitiesQuestions,
 };
-const statementTypes: string[] = ['variable', 'function', 'clear'];
+const statementTypes: string[] = ['variable', 'function', 'calling', 'clear'];
 const variableEntities: string[] = ['variableName', 'type', 'value'];
 const functionEntities: string[] = ['functionName', 'variables', 'body', 'returnType'];
+const callingEntities: string[] = ['functionName', 'arguments'];
 const entityTypes: { [index: string]: string[] } = {
     'variable': variableEntities,
     'function': functionEntities,
+    'calling': callingEntities
 };
 
 
@@ -51,16 +61,16 @@ export default function ChatMessages(props?: any) {
     const otherId: number = 2;
     const [codeSnippet, setCodeSnippet] = React.useState<CodeSnippet>({});
     const [entitiesRegIndex, setEntitiesRegIndex] = React.useState<number>(0);
-    const [currentUser, setCurrentUser] = React.useState<number>(myId);
 
-    const addMessage = useEffect(() => {
+    // AddMessage
+    useEffect(() => {
         if (props.messageString !== '') {
             const chatMessage: ChatMessage = {
                 avatar: "", id: 1, message: props.messageString, time: new Date()
             }
             setMessages([...messages, chatMessage]);
             if (statementType === '') {
-                setStatementType(props.messageString);
+                setStatementType(statementTypes.includes(props.messageString) ? props.messageString : '');
             }
             if (statementType === 'variable' && Object.keys(codeSnippet).length === 0){
                 const newCodeSnippet: VariableSnippet = {
@@ -74,14 +84,22 @@ export default function ChatMessages(props?: any) {
                 };
                 setCodeSnippet(newCodeSnippet);
             }
+            if (statementType === 'calling' && Object.keys(codeSnippet).length === 0){
+                const newCodeSnippet: CallingSnippet = {
+                    parentFunction: "window",
+                    arguments: [], functionName: ""
+                }
+                setCodeSnippet(newCodeSnippet);
+            }
             props.setMessageString('');
         }
     }, [props, messages, statementType, codeSnippet])
 
-    const response = useEffect(() => {
+    // Responding to a user's query
+    useEffect(() => {
         if (messages.length > 0 && messages[messages.length - 1].id === myId && statementType !== '' && statementType !== 'clear' && entitiesRegIndex > -1 && entitiesRegIndex < entityTypes[statementType].length) {
             const computerMessage: ChatMessage = {
-                message: `What is the ${entitiesQuestions[statementType][entitiesRegIndex]}?`,
+                message: `What is/are the ${entitiesQuestions[statementType][entitiesRegIndex]}?`,
                 id: otherId,
                 avatar: '',
                 time: new Date()
@@ -91,7 +109,8 @@ export default function ChatMessages(props?: any) {
         }
     }, [statementType, entitiesRegIndex, messages]);
 
-    const analyzeStatement = useEffect(() => {
+    // Analyzing a user's statement and converting it into an object with the right properties
+    useEffect(() => {
         if (messages.length > 2 && messages[messages.length - 1].id === myId){
             let finished = false;
             const currentMessage = messages[messages.length - 1];
@@ -117,25 +136,40 @@ export default function ChatMessages(props?: any) {
                     setEditorReady(finished);
                     return nextCodeSnippet;
                 });
+            } else if (statementType === 'calling'){
+                const literal: string | string[] = entityKey === 'arguments' ? currentMessage.message.split(' ') : currentMessage.message;
+                setCodeSnippet((prevCodeSnippet: CallingSnippet) => {
+                    const nextCodeSnippet: CallingSnippet = {
+                        ...prevCodeSnippet,
+                        [entityKey]: literal,
+                    }
+                    finished = Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
+                    setEditorReady(finished);
+                    return nextCodeSnippet;
+                });
             }
         }
     }, [entitiesRegIndex, messages, statementType]);
 
 
-
-    const clear = useEffect(() => {
+    // Clearing the chat dialog
+    useEffect(() => {
         if (statementType === 'clear') {
             setMessages([]);
             setStatementType('');
         }
     }, [messages, statementType]);
 
+    // When editor is ready --> propagate object to Ace editor
     useEffect(() => {
         if (editorReady) {
             props.setLiveEditorInput(codeSnippet);
             return () => {
                 setEditorReady(false);
                 setCodeSnippet({});
+                setMessages([]);
+                setStatementType('');
+                setEntitiesRegIndex(0);
             }
         }
     }, [codeSnippet, editorReady, props]);
