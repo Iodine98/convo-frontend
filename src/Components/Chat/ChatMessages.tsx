@@ -10,7 +10,6 @@ interface ChatMessage {
 }
 
 export interface CallingSnippet {
-    parentFunction: string,
     functionName: string,
     arguments: string[]
     [name: string]: string | string[],
@@ -70,7 +69,8 @@ export default function ChatMessages(props?: any) {
             }
             setMessages([...messages, chatMessage]);
             if (statementType === '') {
-                setStatementType(statementTypes.includes(props.messageString) ? props.messageString : '');
+                const captureCommand = new RegExp(statementTypes.reduce((prev, next) => prev + '|' + next), 'i').exec(props.messageString);
+                setStatementType(captureCommand !== null ? captureCommand[0] : '');
             }
             if (statementType === 'variable' && Object.keys(codeSnippet).length === 0){
                 const newCodeSnippet: VariableSnippet = {
@@ -86,8 +86,7 @@ export default function ChatMessages(props?: any) {
             }
             if (statementType === 'calling' && Object.keys(codeSnippet).length === 0){
                 const newCodeSnippet: CallingSnippet = {
-                    parentFunction: "window",
-                    arguments: [], functionName: ""
+                    functionName: "", arguments: []
                 }
                 setCodeSnippet(newCodeSnippet);
             }
@@ -115,13 +114,14 @@ export default function ChatMessages(props?: any) {
             let finished = false;
             const currentMessage = messages[messages.length - 1];
             const entityKey: string = entityTypes[statementType][entitiesRegIndex - 1];
+            const lastEntityKey: string = entityTypes[statementType][entityTypes[statementType].length - 1];
             if (statementType === 'variable') {
                 setCodeSnippet((prevCodeSnippet: VariableSnippet) => {
                     const nextCodeSnippet: VariableSnippet = {
                         ...prevCodeSnippet,
                         [entityKey]: currentMessage.message,
                     }
-                    finished = Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
+                    finished = entityKey === lastEntityKey && Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
                     setEditorReady(finished);
                     return nextCodeSnippet;
                 });
@@ -132,7 +132,7 @@ export default function ChatMessages(props?: any) {
                         ...prevCodeSnippet,
                         [entityKey]: literal,
                     }
-                    finished = Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
+                    finished = entityKey === lastEntityKey && Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
                     setEditorReady(finished);
                     return nextCodeSnippet;
                 });
@@ -143,7 +143,7 @@ export default function ChatMessages(props?: any) {
                         ...prevCodeSnippet,
                         [entityKey]: literal,
                     }
-                    finished = Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
+                    finished = entityKey === lastEntityKey && Object.keys(nextCodeSnippet).every(key => nextCodeSnippet[key] !== '');
                     setEditorReady(finished);
                     return nextCodeSnippet;
                 });

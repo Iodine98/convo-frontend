@@ -16,7 +16,7 @@ export default function LiveCodeEditor(props?: any){
     }
 
     function isCalling(statement: CodeSnippet): statement is CallingSnippet {
-        return (statement as CallingSnippet).parentFunction === 'window';
+        return Array.isArray((statement as CallingSnippet).arguments);
     }
 
     const setVariable = useCallback(() => {
