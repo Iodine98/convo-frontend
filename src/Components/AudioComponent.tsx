@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 export default class AudioComponent {
     // only gets set when startRecording is called
     private mediaRecorder: MediaRecorder | null = null;
@@ -61,15 +59,20 @@ export default class AudioComponent {
      * @private this function is not available outside this component for obvious reasons.
      */
     private postAudioFile(audioFile: Blob) {
-        axios.post('/file', audioFile, {
+        fetch('/file', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'audio/webm;codecs=opus',
                 'Sign': Math.round(Math.random() * 10).toString(),
-            }
-        }).then(response => {
-            console.log(response.data);
-            this.setInputValue(response.data);
-        }).catch(console.error);
+            },
+            body: audioFile,
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            this.setInputValue(data);
+        })
+        .catch(console.error);
     }
 
     /**
