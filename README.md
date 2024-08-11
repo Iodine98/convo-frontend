@@ -1,3 +1,5 @@
+THIS REPO HAS BEEN ARCHIVED AND IS ONLY FOR PORTFOLIO PURPOSES.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 To run this project, do not forget to clone [Iodine98/convo-backend](https://github.com/Iodine98/convo-backend).
